@@ -139,7 +139,7 @@ Prints the current state of the buffer to stdout, including all slot values and 
 
 ```bash
 # Clone the repository
-git clone https://github.com/TinyH/ring-buffer-simulator.git
+git clone https://github.com/HoraEmbedded/ring-buffer-simulator.git
 cd ring-buffer-simulator
 
 # Compile all source files together
