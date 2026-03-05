@@ -1,13 +1,5 @@
-#include <stdio.h>
-
+#include "ring_buffer.h"
 #define BUFFER_SIZE 10
-
-typedef struct {
-    int buffer[BUFFER_SIZE];
-    int head;
-    int tail;
-    int count;
-} RingBuffer;
 
 void init_buffer(RingBuffer *rb) {
         rb->head = 0;
@@ -63,29 +55,3 @@ void display_buffer(RingBuffer *rb) {
     printf("\n");
 }
 
-int main() {
-    RingBuffer rb;
-    init_buffer(&rb);
-
-    printf("Ring buffer initialized. Head: %d, Tail: %d, Count: %d\n \n", rb.head, rb.tail, rb.count);
-
-    display_buffer(&rb);
-
-    write_buffer(&rb, 5);
-    write_buffer(&rb, 10);
-    write_buffer(&rb, 15);
-    printf("After writing values. Head: %d, Tail: %d, Count: %d\n \n", rb.head, rb.tail, rb.count);
-    display_buffer(&rb);
-
-    read_buffer(&rb);
-    read_buffer(&rb);   
-    printf("After reading values. Head: %d, Tail: %d, Count: %d\n  \n", rb.head, rb.tail, rb.count);
-    display_buffer(&rb);
-
-    read_buffer(&rb);
-    read_buffer(&rb); // Attempt to read from an empty buffer
-    read_buffer(&rb); // Attempt to read from an empty buffer
-    printf("After attempting to read from an empty buffer. Head: %d, Tail: %d, Count: %d\n", rb.head, rb.tail, rb.count);
-    display_buffer(&rb);    
-    return 0;
-}
