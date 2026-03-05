@@ -1,12 +1,13 @@
 # Ring Buffer Simulator
 
-A lightweight, fully functional **circular buffer (ring buffer)** implementation in C, designed to simulate real-world embedded systems data queues.
+A lightweight, fully functional **circular buffer (ring buffer)** implementation in C, structured following professional embedded systems engineering conventions — with separated header, source, and driver files.
 
 ---
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Project Structure](#project-structure)
 - [Architecture](#architecture)
 - [API Reference](#api-reference)
 - [Getting Started](#getting-started)
@@ -14,6 +15,7 @@ A lightweight, fully functional **circular buffer (ring buffer)** implementation
 - [Sample Output](#sample-output)
 - [Configuration](#configuration)
 - [Concepts & Design Decisions](#concepts--design-decisions)
+- [Roadmap](#roadmap)
 - [Author](#author)
 
 ---
@@ -26,6 +28,22 @@ This project implements a ring buffer from scratch in C, including:
 - Safe write and read operations with boundary protection
 - Visual state display for debugging and simulation
 - Clean memory initialization to prevent undefined behavior
+- Professional file separation: header, source, and main driver
+
+---
+
+## Project Structure
+
+```
+ring-buffer-simulator/
+│
+├── ring_buffer.h       # Public interface — struct definition & function declarations
+├── ring_buffer.c       # Implementation — all function bodies
+└── main.c              # Driver — demonstrates and tests the ring buffer
+```
+
+> **Design principle:** `ring_buffer.h` is the only file a consumer of this library needs.
+> Internal implementation details are fully encapsulated in `ring_buffer.c`.
 
 ---
 
@@ -59,6 +77,14 @@ head = (head + 1) % BUFFER_SIZE;
 ---
 
 ## API Reference
+
+All declarations are in `ring_buffer.h`. Include it to access the full API:
+
+```c
+#include "ring_buffer.h"
+```
+
+---
 
 ### `void init_buffer(RingBuffer *rb)`
 Initializes the ring buffer. Sets `head`, `tail`, and `count` to `0` and clears all slots.
@@ -113,37 +139,39 @@ Prints the current state of the buffer to stdout, including all slot values and 
 
 ```bash
 # Clone the repository
-git clone https://github.com/HoraEmbedded/ring-buffer-project.git
-cd ring-buffer-project
+git clone https://github.com/TinyH/ring-buffer-simulator.git
+cd ring-buffer-simulator
 
-# Compile
-gcc ring_buffer.c -o ring_buffer
+# Compile all source files together
+gcc main.c ring_buffer.c -o ring_buffer
 
 # Run
 ./ring_buffer          # Linux / macOS
 ring_buffer.exe        # Windows
 ```
 
+> **Note:** Never compile `ring_buffer.h` directly — it is included automatically by the compiler when processing `main.c` and `ring_buffer.c`.
+
 ---
 
 ## Usage Example
 
 ```c
+#include "ring_buffer.h"
+
 int main() {
     RingBuffer rb;
 
-    init_buffer(&rb);         // Initialize
+    init_buffer(&rb);           // Initialize
 
-    write_buffer(&rb, 10);    // Write data
+    write_buffer(&rb, 10);      // Write data
     write_buffer(&rb, 20);
     write_buffer(&rb, 30);
 
-    display_buffer(&rb);      // Visualize state
+    display_buffer(&rb);        // Visualize state
 
-    read_buffer(&rb);         // Read data
-    read_buffer(&rb);
-
-    display_buffer(&rb);      // Visualize updated state
+    read_buffer(&rb);           // Read data
+    display_buffer(&rb);        // Visualize updated state
 
     return 0;
 }
@@ -155,37 +183,39 @@ int main() {
 
 ```
 === Ring Buffer State ===
-Head: 3 | Tail: 0 | Count: 3
+Head: 3, Tail: 0, Count: 3
 [ 10] [ 20] [ 30] [  0] [  0] [  0] [  0] [  0] [  0] [  0]
   T               H
 
 Read value: 10
-Read value: 20
 
 === Ring Buffer State ===
-Head: 3 | Tail: 2 | Count: 1
-[ 10] [ 20] [ 30] [  0] [  0] [  0] [  0] [  0] [  0] [  0]
-               T   H
+Head: 3, Tail: 1, Count: 2
+[ 20] [ 30] [  0] [  0] [  0] [  0] [  0] [  0] [  0] [ 10]
+       T         H
 ```
 
 ---
 
 ## Configuration
 
-Buffer size is defined as a compile-time constant at the top of `ring_buffer.c`:
+Buffer size is defined as a compile-time constant in `ring_buffer.h`:
 
 ```c
 #define BUFFER_SIZE 10
 ```
 
-Change this value to resize the buffer. All logic automatically adapts — no hardcoded values anywhere in the codebase.
+Change this single value to resize the buffer. All logic in `ring_buffer.c` and `main.c` automatically adapts — no hardcoded values anywhere in the codebase.
 
 ---
 
 ## Concepts & Design Decisions
 
+**Why separate `.h` and `.c` files?**
+Separating interface from implementation is a fundamental principle of embedded software architecture. `ring_buffer.h` acts as a public contract — any consumer of this library only needs this file. `ring_buffer.c` remains an internal detail, free to change without affecting external code.
+
 **Why pointers?**
-All functions receive a `RingBuffer *` pointer rather than a copy of the struct. This ensures functions modify the original buffer in memory, not a temporary local copy — critical for correctness in embedded environments.
+All functions receive a `RingBuffer *` pointer rather than a copy of the struct. This ensures functions modify the original buffer in memory, not a temporary local copy — critical for correctness in embedded environments where memory is constrained.
 
 **Why modulo for wrap-around?**
 The expression `(index + 1) % BUFFER_SIZE` provides a branchless, safe way to wrap indices around the buffer boundary — efficient and clean.
@@ -198,8 +228,21 @@ Tracking element count independently avoids the classic ambiguity between full a
 
 ---
 
+## Roadmap
+
+- [x] Phase 1 — Core ring buffer implementation in C
+- [x] Phase 2 — Professional file separation (`.h` / `.c` / `main.c`)
+- [ ] Phase 3 — Interrupt simulation with producer/consumer threads
+- [ ] Phase 4 — Port to STM32 microcontroller (hardware)
+
+---
+
 ## Author
 
 **HoraEmbedded** — Electronics and Automation Systems Engineering Student
 
 ---
+
+## License
+
+This project is open source and available under the [MIT License](LICENSE).
