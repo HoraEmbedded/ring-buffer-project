@@ -18,10 +18,26 @@ void init_buffer(RingBuffer *rb) {
         }
 }
 
+void write_buffer(RingBuffer *rb, int value) {
+    if (rb->count < BUFFER_SIZE) {
+        rb->buffer[rb->head] = value;
+        rb->head = (rb->head + 1) % BUFFER_SIZE;
+        rb->count++;
+    } else {
+        printf("Buffer is full. Cannot write value: %d\n", value);
+    }
+}
+
+
 int main() {
     RingBuffer rb;
     init_buffer(&rb);
 
     printf("Ring buffer initialized. Head: %d, Tail: %d, Count: %d\n", rb.head, rb.tail, rb.count);
+
+    write_buffer(&rb, 5);
+    write_buffer(&rb, 10);
+    write_buffer(&rb, 15);
+    printf("After writing values. Head: %d, Tail: %d, Count: %d\n", rb.head, rb.tail, rb.count);
     return 0;
 }
