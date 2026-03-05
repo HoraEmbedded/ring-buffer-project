@@ -40,24 +40,52 @@ int read_buffer(RingBuffer *rb) {
     }
 }
 
+void display_buffer(RingBuffer *rb) {
+    printf("=== Ring Buffer State ===\n");
+    printf("Head: %d, Tail: %d, Count: %d\n", rb->head, rb->tail, rb->count);
+    for (int i = 0; i < BUFFER_SIZE; i++) {
+        int index = (rb->tail + i) % BUFFER_SIZE;
+        printf("[%2d] ", rb->buffer[index]);
+    }
+    printf("\n");
+
+    for (int i = 0; i < BUFFER_SIZE; i++) {
+        if (i == rb->head && i == rb->tail) {
+            printf(" H/T ");
+        } else if (i == rb->head) {
+            printf(" H   ");
+        } else if (i == rb->tail) {
+            printf(" T   ");
+        } else {
+            printf("     ");
+        }
+    }
+    printf("\n");
+}
+
 int main() {
     RingBuffer rb;
     init_buffer(&rb);
 
-    printf("Ring buffer initialized. Head: %d, Tail: %d, Count: %d\n", rb.head, rb.tail, rb.count);
+    printf("Ring buffer initialized. Head: %d, Tail: %d, Count: %d\n \n", rb.head, rb.tail, rb.count);
+
+    display_buffer(&rb);
 
     write_buffer(&rb, 5);
     write_buffer(&rb, 10);
     write_buffer(&rb, 15);
-    printf("After writing values. Head: %d, Tail: %d, Count: %d\n", rb.head, rb.tail, rb.count);
+    printf("After writing values. Head: %d, Tail: %d, Count: %d\n \n", rb.head, rb.tail, rb.count);
+    display_buffer(&rb);
 
     read_buffer(&rb);
     read_buffer(&rb);   
-    printf("After reading values. Head: %d, Tail: %d, Count: %d\n", rb.head, rb.tail, rb.count);
+    printf("After reading values. Head: %d, Tail: %d, Count: %d\n  \n", rb.head, rb.tail, rb.count);
+    display_buffer(&rb);
 
     read_buffer(&rb);
     read_buffer(&rb); // Attempt to read from an empty buffer
     read_buffer(&rb); // Attempt to read from an empty buffer
     printf("After attempting to read from an empty buffer. Head: %d, Tail: %d, Count: %d\n", rb.head, rb.tail, rb.count);
+    display_buffer(&rb);    
     return 0;
 }
