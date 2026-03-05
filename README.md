@@ -113,8 +113,8 @@ Prints the current state of the buffer to stdout, including all slot values and 
 
 ```bash
 # Clone the repository
-git clone https://github.com/TinyH/ring-buffer-simulator.git
-cd ring-buffer-simulator
+git clone https://github.com/HoraEmbedded/ring-buffer-project.git
+cd ring-buffer-project
 
 # Compile
 gcc ring_buffer.c -o ring_buffer
