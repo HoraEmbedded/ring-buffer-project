@@ -28,6 +28,17 @@ void write_buffer(RingBuffer *rb, int value) {
     }
 }
 
+int read_buffer(RingBuffer *rb) {
+    if (rb->count > 0) {
+        int value = rb->buffer[rb->tail];
+        rb->tail = (rb->tail + 1) % BUFFER_SIZE;
+        rb->count--;
+        printf("Read value: %d\n", value);
+        return value;
+    } else {
+        return -1; // Buffer is empty
+    }
+}
 
 int main() {
     RingBuffer rb;
@@ -39,5 +50,14 @@ int main() {
     write_buffer(&rb, 10);
     write_buffer(&rb, 15);
     printf("After writing values. Head: %d, Tail: %d, Count: %d\n", rb.head, rb.tail, rb.count);
+
+    read_buffer(&rb);
+    read_buffer(&rb);   
+    printf("After reading values. Head: %d, Tail: %d, Count: %d\n", rb.head, rb.tail, rb.count);
+
+    read_buffer(&rb);
+    read_buffer(&rb); // Attempt to read from an empty buffer
+    read_buffer(&rb); // Attempt to read from an empty buffer
+    printf("After attempting to read from an empty buffer. Head: %d, Tail: %d, Count: %d\n", rb.head, rb.tail, rb.count);
     return 0;
 }
