@@ -1,6 +1,6 @@
 # Ring Buffer Simulator
 
-A lightweight, fully functional **circular buffer (ring buffer)** implementation in C, structured following professional embedded systems engineering conventions — with separated header, source, and driver files.
+A lightweight, production-grade **circular buffer (ring buffer)** implementation in C — built following professional embedded systems engineering conventions, with full unit testing, memory validation, and auto-generated documentation.
 
 ---
 
@@ -13,6 +13,9 @@ A lightweight, fully functional **circular buffer (ring buffer)** implementation
 - [Getting Started](#getting-started)
 - [Usage Example](#usage-example)
 - [Sample Output](#sample-output)
+- [Testing](#testing)
+- [Memory Validation](#memory-validation)
+- [Documentation](#documentation)
 - [Configuration](#configuration)
 - [Concepts & Design Decisions](#concepts--design-decisions)
 - [Roadmap](#roadmap)
@@ -25,10 +28,13 @@ A lightweight, fully functional **circular buffer (ring buffer)** implementation
 A **ring buffer** is a fixed-size, circular data structure that operates on the **FIFO** (First In, First Out) principle. It is one of the most widely used data structures in embedded systems engineering — found in UART drivers, audio processing pipelines, CAN bus communication stacks, and real-time operating systems.
 
 This project implements a ring buffer from scratch in C, including:
-- Safe write and read operations with boundary protection
+- Safe write and read operations with full boundary protection
 - Visual state display for debugging and simulation
 - Clean memory initialization to prevent undefined behavior
-- Professional file separation: header, source, and main driver
+- Professional 3-file architecture: header, source, and driver
+- Unit tests with `assert()` covering all critical behaviors
+- Memory validation with Valgrind — zero leaks, zero errors
+- Auto-generated HTML documentation with Doxygen
 
 ---
 
@@ -37,9 +43,14 @@ This project implements a ring buffer from scratch in C, including:
 ```
 ring-buffer-simulator/
 │
-├── ring_buffer.h       # Public interface — struct definition & function declarations
-├── ring_buffer.c       # Implementation — all function bodies
-└── main.c              # Driver — demonstrates and tests the ring buffer
+├── ring_buffer.h           # Public interface — struct, constants & declarations
+├── ring_buffer.c           # Implementation — all function bodies
+├── main.c                  # Driver — demonstrates the ring buffer
+├── test_buffer.c           # Unit tests — verifies all behaviors with assert()
+├── Doxyfile                # Doxygen configuration
+└── docs/
+    └── html/
+        └── index.html      # Auto-generated HTML documentation
 ```
 
 > **Design principle:** `ring_buffer.h` is the only file a consumer of this library needs.
@@ -133,24 +144,24 @@ Prints the current state of the buffer to stdout, including all slot values and 
 ### Prerequisites
 
 - GCC compiler (`gcc --version` to verify)
+- Valgrind — Linux only (`sudo apt-get install valgrind`)
+- Doxygen (`sudo apt-get install doxygen`)
 - Git (optional, for cloning)
 
 ### Build & Run
 
 ```bash
 # Clone the repository
-git clone https://github.com/HoraEmbedded/ring-buffer-simulator.git
-cd ring-buffer-simulator
+git clone https://github.com/HoraEmbedded/ring-buffer-project.git
+cd ring-buffer-project
 
-# Compile all source files together
+# Compile the simulator
 gcc main.c ring_buffer.c -o ring_buffer
 
 # Run
 ./ring_buffer          # Linux / macOS
 ring_buffer.exe        # Windows
 ```
-
-> **Note:** Never compile `ring_buffer.h` directly — it is included automatically by the compiler when processing `main.c` and `ring_buffer.c`.
 
 ---
 
@@ -197,6 +208,78 @@ Head: 3, Tail: 1, Count: 2
 
 ---
 
+## Testing
+
+Unit tests are written using C's built-in `assert()` and cover all critical behaviors:
+
+```bash
+# Compile tests
+gcc -g test_buffer.c ring_buffer.c -o test_buffer
+
+# Run tests
+./test_buffer
+```
+
+### Test Coverage
+
+| Test | What it verifies |
+|---|---|
+| `test_init()` | All slots = 0, head = tail = count = 0 after init |
+| `test_write_and_read()` | FIFO order with interleaved writes and reads |
+| `test_full()` | Overflow protection, correct values, empty detection |
+
+### Expected Output
+
+```
+Initialization test passed!
+Write and read test passed!
+Full buffer test passed!
+All tests passed!
+```
+
+---
+
+## Memory Validation
+
+The project is validated with **Valgrind** for memory safety:
+
+```bash
+# Compile with debug symbols
+gcc -g test_buffer.c ring_buffer.c -o test_buffer
+
+# Run memory check
+valgrind --leak-check=full ./test_buffer
+```
+
+### Valgrind Result
+
+```
+HEAP SUMMARY:
+    in use at exit: 0 bytes in 0 blocks
+  total heap usage: 1 allocs, 1 frees, 1,024 bytes allocated
+
+All heap blocks were freed -- no leaks are possible
+ERROR SUMMARY: 0 errors from 0 contexts
+```
+
+>  Zero memory leaks. Zero errors. The ring buffer uses stack memory exclusively — a best practice in embedded systems where heap usage is minimized.
+
+---
+
+## Documentation
+
+API documentation is auto-generated with **Doxygen** from comments in `ring_buffer.h`:
+
+```bash
+# Generate documentation
+doxygen Doxyfile
+
+# Open in browser
+docs/html/index.html
+```
+
+---
+
 ## Configuration
 
 Buffer size is defined as a compile-time constant in `ring_buffer.h`:
@@ -205,35 +288,41 @@ Buffer size is defined as a compile-time constant in `ring_buffer.h`:
 #define BUFFER_SIZE 10
 ```
 
-Change this single value to resize the buffer. All logic in `ring_buffer.c` and `main.c` automatically adapts — no hardcoded values anywhere in the codebase.
+Change this single value to resize the buffer. All logic adapts automatically — no hardcoded values anywhere in the codebase.
 
 ---
 
 ## Concepts & Design Decisions
 
 **Why separate `.h` and `.c` files?**
-Separating interface from implementation is a fundamental principle of embedded software architecture. `ring_buffer.h` acts as a public contract — any consumer of this library only needs this file. `ring_buffer.c` remains an internal detail, free to change without affecting external code.
+Separating interface from implementation is a fundamental principle of embedded software architecture. `ring_buffer.h` acts as a public contract — any consumer only needs this file. `ring_buffer.c` remains an internal detail, free to change without affecting external code.
 
 **Why pointers?**
-All functions receive a `RingBuffer *` pointer rather than a copy of the struct. This ensures functions modify the original buffer in memory, not a temporary local copy — critical for correctness in embedded environments where memory is constrained.
+All functions receive a `RingBuffer *` pointer rather than a copy of the struct. This ensures functions modify the original buffer in memory — critical for correctness in memory-constrained embedded environments.
 
 **Why modulo for wrap-around?**
 The expression `(index + 1) % BUFFER_SIZE` provides a branchless, safe way to wrap indices around the buffer boundary — efficient and clean.
 
 **Why `-1` as error return?**
-Since the buffer stores non-negative integers in this implementation, `-1` serves as a sentinel value signaling an empty-read error — a common convention in C embedded libraries.
+Since the buffer stores non-negative integers, `-1` serves as a sentinel value signaling an empty-read error — a common convention in C embedded libraries.
 
 **Why a separate `count` field?**
 Tracking element count independently avoids the classic ambiguity between full and empty states when `head == tail`, without sacrificing a buffer slot.
+
+**Why stack memory only?**
+Avoiding `malloc()` and `free()` eliminates the risk of heap fragmentation and memory leaks — essential in long-running embedded systems with limited RAM.
 
 ---
 
 ## Roadmap
 
 - [x] Phase 1 — Core ring buffer implementation in C
-- [x] Phase 2 — Professional file separation (`.h` / `.c` / `main.c`)
-- [ ] Phase 3 — Interrupt simulation with producer/consumer threads
-- [ ] Phase 4 — Port to STM32 microcontroller (hardware)
+- [x] Phase 2 — Professional 3-file architecture (`.h` / `.c` / `main.c`)
+- [x] Phase 3 — Unit tests with `assert()` — all passing
+- [x] Phase 3 — Memory validation with Valgrind — 0 errors, 0 leaks
+- [x] Phase 3 — API documentation with Doxygen
+- [ ] Phase 4 — Interrupt simulation with producer/consumer threads
+- [ ] Phase 5 — Port to STM32 microcontroller (hardware)
 
 ---
 
